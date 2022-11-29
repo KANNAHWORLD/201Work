@@ -1,0 +1,30 @@
+package Lab3;
+
+public class Messenger extends Thread
+{
+	public static void main (String [] args)
+	{
+		
+	}
+	
+	Messenger(MessageQueue MQ)
+	{
+		this.MQ = MQ;
+	}
+	
+	public void run()
+	{
+		for(int i = 0; i < 20; ++i)
+		{
+			MQ.addMessage("Message" + i);
+			try {
+				sleep(892);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	MessageQueue MQ;
+}

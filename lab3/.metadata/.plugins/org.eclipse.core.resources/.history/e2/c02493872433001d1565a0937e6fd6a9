@@ -1,0 +1,16 @@
+package Lab3;
+
+public class Messenger extends Thread
+{
+	public static void main (String [] args)
+	{
+		
+	}
+	
+	Messenger(MessegeQueue MQ)
+	{
+		this.MQ = MQ;
+	}
+	
+	MessageQueue MQ;
+}

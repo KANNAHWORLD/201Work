@@ -1,0 +1,103 @@
+package lab10;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server {
+	@SuppressWarnings("resource")
+	public static void main(String [] args) throws IOException
+	{
+		ServerSocket ss = null;
+		try {
+			ss = new ServerSocket(8080);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		while(true)
+		{
+			System.out.println("Waiting");
+			ServerThread st = new ServerThread();
+			st.run(ss.accept());
+		}
+	}
+}
+
+
+class ServerThread extends Thread
+{
+	Socket ss;
+	PrintStream out;
+	BufferedReader in;
+	public void run(Socket ss)
+	{
+		this.ss = ss;
+		try {
+			BufferedReader out = new BufferedReader(new InputStreamReader(ss.getInputStream()));
+	        BufferedWriter in = new BufferedWriter(new OutputStreamWriter(ss.getOutputStream()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		this.start();
+	}
+	public void run()
+	{
+		System.out.println("Running");
+		try {
+			in.readLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		BufferedReader FIS = null;
+		
+		try {
+			FIS = new BufferedReader(new FileReader("test.txt"));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		String line;
+//		try {
+//			while((line = FIS.readLine()) != null)
+//			{
+//				out.write(line);
+//			}
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		
+		out.write("HTTP/1.0 200 OK\r\n");
+        out.write("Date: Fri, 31 Dec 1999 23:59:59 GMT\r\n");
+        out.write("Server: Apache/0.8.4\r\n");
+        out.write("Content-Type: text/html\r\n");
+        out.write("Content-Length: 59\r\n");
+        out.write("Expires: Sat, 01 Jan 2000 00:59:59 GMT\r\n");
+        out.write("Last-modified: Fri, 09 Aug 1996 14:21:40 GMT\r\n");
+        out.write("\r\n");
+        out.write("<TITLE>Exemple</TITLE>");
+        out.write("<P>Ceci est une page d'exemple.</P>");
+
+		
+		
+		try {
+			FIS.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}

@@ -1,0 +1,93 @@
+package lab10;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server {
+	@SuppressWarnings("resource")
+	public static void main(String [] args) throws IOException
+	{
+		ServerSocket ss = null;
+		try {
+			ss = new ServerSocket(8080);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		while(true)
+		{
+			System.out.println("Waiting");
+			ServerThread st = new ServerThread();
+			st.run(ss.accept());
+		}
+	}
+}
+
+
+class ServerThread extends Thread
+{
+	Socket ss;
+	PrintStream out;
+	BufferedReader in;
+	public void run(Socket ss)
+	{
+		this.ss = ss;
+		try {
+			in = new BufferedReader(new InputStreamReader(ss.getInputStream()));
+	        out = new PrintStream(new BufferedOutputStream(ss.getOutputStream()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		this.start();
+	}
+	public void run()
+	{
+		System.out.println("Running");
+		try {
+			in.readLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		BufferedReader FIS = null;
+		
+		try {
+			FIS = new BufferedReader(new FileReader("test.html"));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		out.println("HTTP/1.0 200 OK\nContent-Type: text/html\n");
+
+		
+		
+		int line = 0;
+		try {
+			while ((line = FIS.read()) != -1)
+			{
+				out.write(line);
+			}
+		} catch (IOException e1) {
+		}
+		
+		
+		try {
+			FIS.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}

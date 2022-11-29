@@ -1,0 +1,63 @@
+package lab10;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server {
+	@SuppressWarnings("resource")
+	public static void main(String [] args) throws IOException
+	{
+		ServerSocket ss = null;
+		try {
+			ss = new ServerSocket(8080);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		while(true)
+		{
+			System.out.println("Waiting");
+			ServerThread st = new ServerThread();
+			st.run(ss.accept());
+		}
+	}
+}
+
+
+class ServerThread extends Thread
+{
+	Socket ss;
+	PrintStream PS;
+	BufferedReader BR;
+	public void run(Socket ss)
+	{
+		this.ss = ss;
+		try {
+			PS = new PrintStream(new BufferedOutputStream(ss.getOutputStream()));
+			BR = new BufferedReader(new InputStreamReader(ss.getInputStream()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		this.start();
+	}
+	public void run()
+	{
+		System.out.println("Running");
+		try {
+			BR.readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String notFound = "HTTP/1.1 404 Not Found";
+		
+		PS.println(notFound);
+		PS.flush();
+	}
+}

@@ -1,0 +1,131 @@
+package bansalsi_CSCI201_Assignment3;
+
+import java.util.ArrayList;
+
+
+
+import java.util.HashMap;
+import java.net.HttpURLConnection;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.io.IOException;
+import java.net.*;
+
+import com.google.gson.Gson;
+import com.google.gson.annotations.*;
+
+class Company2 
+{
+	@SerializedName("c")
+	public float current_price;
+	
+	@SerializedName("d")
+	public double change;
+	
+	@SerializedName("dp")
+	public double percent_change;
+	
+	@SerializedName("h")
+	public double high_price;
+	
+	@SerializedName("l")
+	public double low_price;
+	
+	@SerializedName("o")
+	public double open_price;
+
+	@SerializedName("pc")
+	public double previous_close;
+	
+	@SerializedName("t")
+	public double trading_day;
+}
+
+
+
+
+public class JsonProcessor
+{	
+	public static HashMap<String, Company2> priceMap = new HashMap<String, Company2>();
+	
+	private static final String APIKey = "cd8qsdaad3i7j6r2feogcd8qsdaad3i7j6r2fep0";
+	private static final String URL = "https://finnhub.io/api/v1/quote?";
+	
+	public static HashMap<String, Company2> getPriceData(ArrayList<CSVSchedule> all)
+	{
+		Gson gson = new Gson();
+		@SuppressWarnings("unused")
+		HttpResponse<String> response = null;
+		
+		for(CSVSchedule x : all)
+		{
+			HttpRequest request = HttpRequest.newBuilder()
+					.uri(URI.create(getQuoteURL(x.ticker)))
+					.method("GET", HttpRequest.BodyPublishers.noBody())
+					.build();
+			try {
+				response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			Company2 cp = gson.fromJson(response.body(), Company2.class);
+//			System.out.println(response.body());
+			priceMap.put(x.ticker, cp);
+		}
+		
+		
+		return priceMap;
+	}
+	
+	
+	public static HashMap<String, Company2> testgetPriceData(String tick)
+	{
+		Gson gson = new Gson();
+		HttpResponse<String> response = null;
+		
+		
+			HttpRequest request = HttpRequest.newBuilder()
+					.uri(URI.create(getQuoteURL(tick)))
+					.method("GET", HttpRequest.BodyPublishers.noBody())
+					.build();
+			try {
+				response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			System.out.println(response.body());
+			Company2 cp = gson.fromJson(response.body(), Company2.class);
+			System.out.println(response.body());
+			priceMap.put(tick, cp);
+		
+		return priceMap;
+	}
+	
+	public static String getQuoteURL(String ticker)
+	{
+		String ret = new String();
+		
+		for(int i = 0; i < URL.length(); ++i)
+		{
+			ret += URL.charAt(i);
+		}
+		
+		ret += "symbol=" + ticker.toUpperCase() + "&" + "token=" + APIKey;
+		
+		System.out.println(ret);
+		
+		return ret;
+	}
+	
+	public static void main(String [] args)
+	{
+		testgetPriceData("AMD");
+	}
+	
+}

@@ -1,0 +1,19 @@
+package lab5;
+
+public class Main {
+
+	public static void main()
+	{
+		RandomNumberGenerator RMG = new RandomNumberGenerator();
+		Sequential search = new Sequential();
+		start = System.currentTimeMillis();
+		search.Run();
+		System.out.println(System.currentTimeMillis()-start);
+		
+		
+		
+	}
+	
+	static long start;
+	
+}

@@ -1,0 +1,117 @@
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class SleepingBarber extends Thread {
+
+	private static int maxSeats;
+	private static int totalCustomers;
+	private static Vector<Customer> customersWaiting;
+	private Lock barberLock;
+	private Condition sleepingCondition;
+	private boolean moreCustomers;
+	private static boolean barberOneSleep;
+	String barberNumber;
+	
+	public SleepingBarber(String s) {
+		
+		barberNumber = new String();
+		barberNumber = s;
+		maxSeats = 3;
+		totalCustomers = 10;
+		moreCustomers = true;
+		customersWaiting = new Vector<Customer>();
+		barberLock = new ReentrantLock();
+		sleepingCondition = barberLock.newCondition();
+		this.start();
+		
+	}
+	
+	public synchronized boolean addCustomerToWaiting(Customer customer) {
+		if (customersWaiting.size() == maxSeats) {
+			return false;
+		}
+		Util.printMessage("Customer " + customer.getCustomerName() + " is waiting");
+		customersWaiting.add(customer);
+		String customersString = "";
+		for (int i=0; i < customersWaiting.size(); i++) {
+			customersString += customersWaiting.get(i).getCustomerName();
+			if (i < customersWaiting.size() - 1) {
+				customersString += ",";
+			}
+		}
+		Util.printMessage("Customers currently waiting: " + customersString);
+		return true;
+	}
+	
+	public void wakeUpBarber() {
+		try {
+			barberLock.lock();
+			sleepingCondition.signal();
+		} finally {
+			barberLock.unlock();
+		}
+	}
+	
+	public void run() {
+		while(moreCustomers) {
+			while(!customersWaiting.isEmpty()) {
+				Customer customer = null;
+				synchronized(this) {
+					customer = customersWaiting.remove(0);
+				}
+				customer.startingHaircut();
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException ie) {
+					System.out.println(barberNumber + " is cutting customer's hair" + ie.getMessage());
+				}
+				customer.finishingHaircut();
+				Util.printMessage(barberNumber + " Checking for more customers...");		
+			}
+			try {
+				barberLock.lock();
+				Util.printMessage(barberNumber +  " No customers, so time to sleep...");
+				sleepingCondition.await();
+				Util.printMessage(barberNumber + " Someone woke me up!");
+			} catch (InterruptedException ie) {
+				System.out.println(barberNumber+" is while sleeping: " + ie.getMessage());
+			} finally {
+				barberLock.unlock();
+			}
+		}
+		Util.printMessage(barberNumber+ " All done for today!  Time to go home!");
+		
+	}
+	
+	public static void main(String [] args) {
+		SleepingBarber sb = new SleepingBarber("1");
+		SleepingBarber sb2 = new SleepingBarber("2");
+		
+		ExecutorService executors = Executors.newCachedThreadPool();
+
+		for (int i=0; i < SleepingBarber.totalCustomers; i++) {
+			Customer customer = new Customer(i, sb, sb2);
+			executors.execute(customer);
+			try {
+				Random rand = new Random();
+				int timeBetweenCustomers = rand.nextInt(2000);
+				Thread.sleep(timeBetweenCustomers);
+			} catch (InterruptedException ie) {
+				System.out.println("ie in customers entering: " + ie.getMessage());
+			}
+		}
+		executors.shutdown();
+		while(!executors.isTerminated()) {
+			Thread.yield();
+		}
+		Util.printMessage("No more customers coming today...");
+		sb.moreCustomers = false;
+		sb.wakeUpBarber();
+	}
+}

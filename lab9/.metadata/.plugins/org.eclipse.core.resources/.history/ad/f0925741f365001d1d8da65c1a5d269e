@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sid's Clusterfuck</title>
+</head>
+<body>
+
+<form action = "submit" method = "GET">
+  
+  <label for="fname">First name:</label><br>
+  
+  <input required type="text" id="fname" name="fname"><br>
+  
+  <label for="lname">Last name:</label><br>
+  <input placeholder = "PLease enter your last name" type="text" id="lname" name="lname"><br>
+  
+  
+  <textarea id="story" name="story"
+          rows="5" cols="33">
+	It was a dark and stormy night...a
+	</textarea>
+	<br>
+	<select name="cars" id="cars">
+	  <option value="volvo">Volvo</option>
+	  <option value="saab">Saab</option>
+	  <option value="mercedes">Mercedes</option>
+	  <option value="audi">Audi</option>
+	</select>
+	<br>
+	
+	
+	<fieldset>
+	<input checked type="radio" id="html" name="fav_language" value="HTML">
+		<label for="html">HTML</label><br>
+		<input type="radio" id="css" name="fav_language" value="CSS">
+		<label for="css">CSS</label><br>
+	<input type="radio" id="javascript" name="fav_language" value="JavaScript">
+	</fieldset>
+	
+  <br>
+  		<input type="month" id="start" name="start"
+       min="2018-03" value="2018-05">
+  <br>
+  
+  
+  <input type="email" id="email" name="email">
+  
+  <br>
+  
+  <input type="range" id="volume" name="volume"
+         min="0" max="11">
+  <label for="volume">Volume</label>
+  
+  <br>
+  <input type="reset" value="Reset">
+  <br>
+  
+  	<input type = "submit" value = "Click Here" >
+  
+</form>
+
+</body>
+</html>

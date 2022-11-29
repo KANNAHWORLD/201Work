@@ -1,0 +1,15 @@
+public class MessageTest
+{
+	public static void main(String [] args)
+	{
+		MessageQueue MQ = new MessageQueue();
+		Subscriber sub = new Subscriber(MQ);
+		Messenger mes = new Messenger(MQ);
+		ExecutorService ex = Executors.newFixedThreadPool(2);
+		ex.execute(sub);
+		ex.execute(mes);
+		ex.shutdown();
+	}
+
+
+}

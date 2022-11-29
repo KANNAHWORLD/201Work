@@ -1,0 +1,24 @@
+package lab5;
+
+public class Main {
+
+	public static void main(String [] args)
+	{
+		//just to initialize the Random Number Generator
+		//Only has static methods so it is fine not to assign it anything
+		new RandomNumberGenerator();
+		Sequential search = new Sequential();
+		start = System.currentTimeMillis();
+		
+		search.Run();
+		System.out.println("Sequential took " + (System.currentTimeMillis()-start) + " milliseconds");
+		
+		multiThread MT = new multiThread();
+		start = System.currentTimeMillis();
+		MT.runThisClass();
+		System.out.println(System.currentTimeMillis()-start);
+	}
+	
+	static long start;
+	
+}

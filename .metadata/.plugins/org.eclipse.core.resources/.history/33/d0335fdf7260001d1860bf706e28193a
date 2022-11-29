@@ -1,0 +1,106 @@
+package lab10;
+
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server {
+	@SuppressWarnings("resource")
+	public static void main(String [] args) throws IOException
+	{
+		ServerSocket ss = null;
+		try {
+			ss = new ServerSocket(8080);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		while(true)
+		{
+			System.out.println("Waiting");
+			ServerThread st = new ServerThread();
+			st.run(ss.accept());
+		}
+	}
+}
+
+
+class ServerThread extends Thread
+{
+	Socket ss;
+	PrintStream out;
+	BufferedReader in;
+	public void run(Socket ss)
+	{
+		this.ss = ss;
+		try {
+			in = new BufferedReader(new InputStreamReader(ss.getInputStream()));
+	        out = new PrintStream(new BufferedOutputStream(ss.getOutputStream()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		this.start();
+	}
+	public void run()
+	{
+		System.out.println("Running");
+		try {
+			in.readLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		BufferedReader FIS = null;
+		
+		try {
+			FIS = new BufferedReader(new FileReader("test.txt"));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		String line;
+//		try {
+//			while((line = FIS.readLine()) != null)
+//			{
+//				out.write(line);
+//			}
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		try {
+		out.print("HTTP/1.0 200 OK\r\n");
+        out.print("Date: Fri, 31 Dec 1999 23:59:59 GMT\r\n");
+        out.print("Server: Apache/0.8.4\r\n");
+        out.print("Content-Type: text/html\r\n");
+        out.print("Content-Length: 59\r\n");
+        out.print("Expires: Sat, 01 Jan 2000 00:59:59 GMT\r\n");
+        out.print("Last-modified: Fri, 09 Aug 1996 14:21:40 GMT\r\n");
+        out.print("\r\n");
+        out.print("<TITLE>Exemple</TITLE>");
+        out.print("<P>Ceci est une page d'exemple.</P>");
+		}catch(Exception E)
+		{
+			
+		}
+		
+		
+		try {
+			FIS.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+}

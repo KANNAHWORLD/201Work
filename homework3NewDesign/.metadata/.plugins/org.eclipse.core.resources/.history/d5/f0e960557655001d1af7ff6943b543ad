@@ -1,0 +1,274 @@
+package bansalsi_CSCI201_Assignment3;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Vector;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.locks.*;
+import java.util.concurrent.*;
+import com.google.common.collect.*;
+import com.google.gson.Gson;
+
+public class Server {
+	
+	public Vector<ServerThread> clients;
+	ArrayList<CSVSchedule> schedule;
+	ArrayList<CSVTrader> traders;
+	public static HashMap<String, Company> priceMap;
+	public static int currentJobTest = 0;
+	public static Lock jobLock = new ReentrantLock();
+	public static PeekingIterator<CSVSchedule> PeekingJobIt;
+	public static ArrayList<CSVSchedule> unDoneTrades = new ArrayList<CSVSchedule>();
+	public static int amountTraders;
+	public static int jobAmount;
+	public static ArrayList<Boolean> busy = new ArrayList<Boolean>();
+
+	public void startServer(int port)
+	{
+		clients = new Vector<ServerThread>();
+		this.port = port;
+		
+		ServerSocket server = null;
+		try {
+			server = new ServerSocket(port);
+		} catch (IOException e) {
+			System.out.println("Port not usable.");
+			System.exit(0);
+		}
+		
+		schedule = CSVParser.getTextFile("Schedule");
+		traders = CSVTraderParser.getTextFile("traders");
+		priceMap = JsonProcessor.getPriceData(schedule);
+		ExecutorService executor = Executors.newCachedThreadPool();
+		
+		System.out.println("Listiening on port " + port + ".\nWaiting for traders...");
+
+		for(int i = 0; i < traders.size(); ++i)
+		{
+			Socket s = null;
+			try {
+				s = server.accept();
+			} catch (IOException e) {
+			}
+			ServerThread st = new ServerThread(s, traders.size()-i-1, traders.get(i).startBalance, i+1);
+			busy.add(i, false);
+			clients.add(st);
+		
+			System.out.println("Connection from: " + s.getInetAddress());
+			if(i <  traders.size()-1)
+			{
+				System.out.println("Waiting for " + (traders.size()-i-1) + " more trader(s)...");
+			}
+		}
+		
+		broadcast("All traders have arrived!");
+		System.out.println("Starting service.");
+		broadcast("Starting service.");
+		broadcast("Next");
+		
+		// now we should begin making all of the threads start running, and try for all of them to get jobs
+		PeekingJobIt = Iterators.peekingIterator(schedule.iterator());
+		for(ServerThread x : clients)
+		{
+			executor.execute(x);
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		while(PeekingJobIt.hasNext())
+		{
+			for(int i = 0; i < busy.size(); ++i)
+			{
+				busy.set(i, true);
+				try {
+					Thread.sleep(250);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+
+		}
+	
+		executor.shutdown();
+		
+		while(!executor.isTerminated())
+		{
+			Thread.yield();
+		}
+		
+		System.out.println("Processing Complete");
+	}
+	
+	public static void main(String [] args)
+	{
+		Server s = new Server();
+		s.startServer(6000);
+		
+	}
+	
+	public void broadcast(String s)
+	{
+		for (ServerThread x : clients)
+		{
+			x.printToSocket(s);
+		}
+	}
+	
+	int port;
+}
+
+class ServerThread extends Thread{
+	public BufferedReader inputStream;
+	public PrintStream outPutStream;
+	public Socket socket;
+	double initbalance;
+	double balance;
+	double profit = 0;
+	int selfID = 0;
+	public ServerThread(Socket s, int i, int balance, int selfID) {
+		this.selfID = selfID;
+		this.socket = s;
+		this.balance = balance;
+		this.initbalance = balance;
+		
+		try {
+			// to do --> store them somewhere, you will need them later 
+			inputStream = new BufferedReader(new InputStreamReader(s.getInputStream()));
+			outPutStream = new PrintStream(new BufferedOutputStream(s.getOutputStream()));
+			
+		} catch (IOException ioe) {
+			System.out.println("ioe in ServerThread constructor: " + ioe.getMessage());
+		}
+		this.initbalance = balance;
+		if(i != 0)
+		{
+			outPutStream.println(i + " more trader is needed before the service can begin.");
+			outPutStream.flush();
+		}
+	}
+
+	public void printToSocket(String printString)
+	{
+		outPutStream.println(printString);
+		outPutStream.flush();
+	}
+	
+	public void run()
+	{
+		buyAndSell();
+	}
+	
+	public void buyAndSell()
+	{
+		while(Server.PeekingJobIt.hasNext())
+		{
+			while(Server.busy.get(selfID-1) == false)
+			{
+				
+			}
+			Server.jobLock.lock();
+			Server.busy.set(selfID-1, false);
+			String tick = null;
+			double price = 0;
+			int Amount = 0;
+			ArrayList<Job> serilizingArray = new ArrayList<Job>();
+			Gson gson = new Gson();
+			while(Server.PeekingJobIt.hasNext())
+			{
+				tick = Server.PeekingJobIt.peek().ticker;
+				price = Server.priceMap.get(tick).current_price;
+				Amount = (int) (balance / price);
+				int trdamt = Server.PeekingJobIt.peek().tradeamount;
+				
+				if(trdamt < 1)
+				{
+					serilizingArray.add(new Job(tick, price, Server.PeekingJobIt.peek().time, trdamt));
+					Server.PeekingJobIt.next();
+					profit += (price * trdamt * -1);
+				}
+				else if (Amount >= trdamt)
+				{
+					serilizingArray.add(new Job(tick, price, Server.PeekingJobIt.peek().time, trdamt));
+					Server.PeekingJobIt.next();
+					balance -= (price * trdamt);
+				}
+				else
+				{
+					Server.jobAmount += 1;
+					if(Server.jobAmount >= Server.amountTraders)
+					{
+						Server.unDoneTrades.add(Server.PeekingJobIt.peek());
+						Server.jobAmount = 0;
+						Server.PeekingJobIt.next();
+					}
+					break;
+				}
+				
+			}
+			Server.jobLock.unlock();
+			sObj send = new sObj();
+			send.list = serilizingArray;
+			printToSocket(gson.toJson(send));
+			try {
+				Thread.sleep(1000 * serilizingArray.size());
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		printToSocket("End");
+		
+		String response = null;
+		try {
+			response = inputStream.readLine();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		String done = "Done";
+		Gson gson = new Gson();
+		if(response.equals(done))
+		{
+			sObj send2 = new sObj();
+			send2.list = new ArrayList<Job>();
+			for(CSVSchedule x : Server.unDoneTrades)
+			{
+				send2.list.add(new Job(x.ticker, Server.priceMap.get(x.ticker).current_price, x.time, x.tradeamount));
+			}
+			if(!send2.list.isEmpty())
+			{
+				printToSocket(gson.toJson(send2));
+			}
+			else 
+			{
+				printToSocket("None");
+			}
+		}
+		printToSocket("" + profit + "");
+	}
+}
+
+class Job
+{
+	public Job() {}
+	Job(String t, double p, int ttim, int tdamt)
+	{
+		this.tick = t;
+		this.price = p;
+		this.time = ttim;
+		this.tdamt = tdamt;
+	}
+	public int tdamt;
+	String tick;
+	double price;
+	int time;
+}
+

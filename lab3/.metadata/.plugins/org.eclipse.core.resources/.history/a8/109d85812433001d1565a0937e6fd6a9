@@ -1,0 +1,9 @@
+package Lab3;
+
+public class Messenger extends Thread
+{
+	public static void Main (String [] args)
+	{
+		
+	}
+}

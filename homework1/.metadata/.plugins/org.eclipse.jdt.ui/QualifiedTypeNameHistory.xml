@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="com.google.gson.annotations.SerializedName"/>
+    <fullyQualifiedTypeName name="java.util.ArrayList"/>
+    <fullyQualifiedTypeName name="java.util.Map"/>
+    <fullyQualifiedTypeName name="com.google.gson.JsonIOException"/>
+    <fullyQualifiedTypeName name="UI"/>
+    <fullyQualifiedTypeName name="UI.Printer"/>
+    <fullyQualifiedTypeName name="org.apache.commons.text.WordUtils"/>
+    <fullyQualifiedTypeName name="java.util.Collections"/>
+    <fullyQualifiedTypeName name="com.google.gson.GsonBuilder"/>
+    <fullyQualifiedTypeName name="java.io.FileWriter"/>
+    <fullyQualifiedTypeName name="java.lang.System"/>
+    <fullyQualifiedTypeName name="java.lang.reflect.GenericSignatureFormatError"/>
+</qualifiedTypeNameHistroy>

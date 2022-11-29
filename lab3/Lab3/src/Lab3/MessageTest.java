@@ -1,0 +1,24 @@
+package Lab3;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class MessageTest
+{
+	public static void main(String [] args)
+	{
+		MessageQueue MQ = new MessageQueue();
+		Subscriber sub = new Subscriber(MQ);
+		Messenger mes = new Messenger(MQ);
+		ExecutorService ex = Executors.newFixedThreadPool(2);
+		ex.execute(sub);
+		ex.execute(mes);
+		while(!ex.isTerminated())
+		{
+			Thread.yield();
+		}
+		ex.shutdown();
+	}
+
+
+}

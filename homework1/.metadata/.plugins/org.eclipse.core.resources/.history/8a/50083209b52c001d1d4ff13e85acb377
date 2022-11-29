@@ -1,0 +1,752 @@
+import java.io.*;
+import java.util.*;
+import java.lang.String;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.annotations.SerializedName;
+import org.apache.commons.text.WordUtils;
+
+
+
+public class Main {
+	
+	public static void main(String[] args)
+	{
+		// Get the Json Object
+		JsonObject jObj = new JsonObject();
+		
+		//Just for purpose of creating new variables inside this
+		JsonProcessor jsonProcessor = new JsonProcessor();
+		
+		jObj = JsonProcessor.getJsonData();
+
+		
+		//Present menus for the dumbass clients to read
+		UI ui = new UI();
+		ui.runner(jObj);
+		
+		
+	}
+	
+}
+
+class JsonProcessor
+{
+	JsonProcessor(){
+		allCompTickers = new HashSet<String>();
+		tickers = new HashSet<String>();
+		tickers.clear();
+		allCompTickers.clear();
+	}
+	public static JsonObject getJsonData()
+	{
+		
+		Gson gson = new Gson();
+		JsonObject jObj = new JsonObject();
+	
+		
+		Scanner scan = new Scanner(System.in);
+		System.out.print("data: ");
+		String fileName = new String();
+		
+		fileName = scan.next();
+		scan.nextLine();
+		
+		Reader file = fileValidator(fileName);
+				
+		jObj.works = true;
+		
+		try
+		{
+			jObj = gson.fromJson(file, JsonObject.class);
+			file.close();
+			
+		}
+		catch(NullPointerException NPE)
+		{
+			return getJsonData();
+		}
+		catch (JsonSyntaxException JSE)
+		{
+			System.out.println("The file " + fileName + " is not formatted correctly\n");
+			jObj.works = false;
+			return jObj;
+		}
+		catch (JsonIOException JIOE)
+		{
+			System.out.println("The file " + fileName + " is not formatted correctly\n");
+			jObj.works = false;
+			return jObj;
+		}
+		catch (IOException IOE)
+		{
+			System.out.println("The file " + fileName + " is not formatted correctly\n");
+			jObj.works = false;
+			return jObj;
+		}
+		
+		if(jObj == null)
+		{
+			System.out.println("The file " + fileName + "does not have any data\n");
+			jObj = new JsonObject();
+			jObj.works = false;
+			return jObj;
+		}
+	
+	
+	for(Company x : jObj.data)
+	{
+//		int result = verifyEntry(x);
+		if(verifyEntry(x) == -1)
+		{
+			return getJsonData();
+		}
+	}
+		System.out.println("The file has been properly read.");
+		jObj.filename = fileName;
+		
+		return jObj;
+	}
+
+	private static int verifyEntry(Company comp)
+	{
+		if(allCompTickers.contains(comp.ticker))
+		{
+			System.out.println("Ticker already exists");
+			return -1;
+		}
+		
+		if(!(comp.exchangeCode.equalsIgnoreCase("NASDAQ") || comp.exchangeCode.equalsIgnoreCase("NYSE")))
+		{
+			System.out.println("Invalid stock exchange listed in Json file");
+			return -1;
+		}
+		
+		if(!checkValidDate(comp.startDate))
+		{
+			System.out.println("Invalid date format");
+			return -1;
+		}
+		
+		if(comp.description.isEmpty())
+		{
+			System.out.println("No Description, invalid format");
+			return -1;
+		}
+		if(comp.name.isEmpty())
+		{
+			System.out.println("No Company name, invalid format");
+			return -1;
+		}
+		if(comp.ticker.isEmpty())
+		{
+			System.out.println("No Company ticker, invalid format");
+			return -1;
+		}
+		if(comp.startDate.isEmpty())
+		{
+			System.out.println("No Start Date, invalid format");
+			return -1;
+		}
+		
+		allCompTickers.add(comp.ticker);
+		tickers.add(comp.exchangeCode);
+		
+		
+		return 0;
+	}
+	
+	private static boolean checkValidDate(String date)
+	{
+		String[] arr = date.split("-");
+		try
+		{
+			if(!(Integer.valueOf(arr[0])>=1000))
+			{
+				return false;
+			}
+			if(!((Integer.valueOf(arr[1]) > 0) && (Integer.valueOf(arr[1]) <= 12)))
+			{
+				return false;
+			}
+			if(!((Integer.valueOf(arr[2]) > 0) && (Integer.valueOf(arr[2]) <= 31)))
+			{
+				return false;
+			}
+		}
+		catch (NumberFormatException NFE)
+		{
+			return false;
+		} catch (ArrayIndexOutOfBoundsException AIOOBE)
+		{
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private static BufferedReader getJsonFile()
+	{
+		Scanner scan = new Scanner(System.in);
+		System.out.print("data: ");
+		String fileName = scan.next();
+		scan.close();
+		return fileValidator(fileName);
+	}
+	
+	private static BufferedReader fileValidator(String source)
+	{
+		BufferedReader inputFile = null;
+		try
+		{
+			inputFile = new BufferedReader(new FileReader(source));
+		} catch (IOException except)
+		{
+			System.out.println("The file " + source + " could not be found\n");
+			
+		} 
+		return inputFile;
+	}	
+
+	public static boolean nameValidator(JsonObject jObj, String str)
+	{
+		for(Company x : jObj.data)
+		{
+			if(x.name.equalsIgnoreCase(str))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public static boolean tickerValidator(JsonObject jObj, String str)
+	{
+		for(Company x : jObj.data)
+		{
+			if(x.ticker.equalsIgnoreCase(str))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static boolean dateValidator(JsonObject jObj, String str)
+	{
+		return checkValidDate(str);
+	}
+
+	public static boolean xChangeValidator(String str)
+	{
+		return str.equalsIgnoreCase("NASDAQ") || str.equalsIgnoreCase("NYSE");
+	}
+	
+	
+	static Set<String> allCompTickers;
+	static Set<String> tickers;
+}
+
+class CompanyComparator implements Comparator<Company> 
+{
+	public int compare(Company comp1, Company comp2)
+	{
+		return comp1.name.compareToIgnoreCase(comp2.name);
+	}
+}
+
+class UI
+{
+	UI(){
+		commandHandler.obj = new JsonObject();
+	}
+	public static void runner(JsonObject jObj)
+	{
+		commandHandler.obj = jObj;
+		while(true)
+		{
+			UI.printMenu();
+			commandHandler.cmdHandler(UI.response());
+		}
+	}
+	
+	private static void printMenu()
+	{
+		String menuItems = "\n\t1) Display all public companies\n"
+				+ "\t2) Search for a stock (by ticker)\n"
+				+ "\t3) Search for all stocks on an exchange\n"
+				+ "\t4) Add a new company/stocks\n"
+				+ "\t5) Remove a company\n"
+				+ "\t6) Sort companies\n"
+				+ "\t7) Exit\n"
+				+ "What would you like to do? ";
+		System.out.print(menuItems);
+	}
+	
+	private static int response()
+	{
+		Scanner scan = new Scanner(System.in);
+		int option = 0;
+		
+		while(option < 1 || option > 7)
+		{
+
+			try
+			{
+				option = scan.nextInt();
+			} catch (InputMismatchException IME)
+			{
+				option = -1;
+			}
+			if(option < 1 || option > 7)
+			{
+				System.out.print("That is not a valid option\nWhat would you like to do? ");
+			}
+		}
+		System.out.println();
+		return option;
+	}
+	
+	private static class commandHandler
+	{
+		
+		public static void cmdHandler(int option)
+		{
+			switch(option)
+			{
+			case 1:
+				displayAllCompanies();
+				break;
+				
+			case 2:
+				searchForStock();
+				break;
+				
+			case 3:
+				searchByXchange();
+				break;
+				
+			case 4:
+				addNewCompany();
+				break;
+				
+			case 5:
+				removeCompany();
+				break;
+			
+			case 6:
+				sortCompanies();
+				break;
+				
+			case 7:
+				exit();
+				break;
+			
+			default:
+				exit();
+				break;
+			}
+				
+		}
+		
+		private static void displayAllCompanies() 
+		{
+			for(Company x : obj.data)
+			{
+				Printer.printComp(x);
+			}
+		}
+		
+		private static void searchForStock() {
+			
+			System.out.print("What is the ticker of the company you would like to search for? "); 
+			Scanner scan = new Scanner(System.in);
+			String tick = scan.next();
+			
+			for(Company x: obj.data)
+			{
+				if (x.ticker.equalsIgnoreCase(tick))
+				{
+					Printer.printHeading(x);
+					return;
+				}
+			}
+			
+			System.out.println(tick + "could not be found.");
+		}
+		
+		private static void addNewCompany() 
+		{
+			Scanner scan = new Scanner(System.in);
+			Company comp = new Company();
+			
+		
+			System.out.print("What is the name of the company you would like to add? ");
+			comp.name = scan.nextLine();
+			
+			System.out.println();
+			
+			while(true) {
+				System.out.print("What is the stock symbol of " + comp.name + "? ");
+				comp.ticker = scan.nextLine();
+				if(!JsonProcessor.tickerValidator(obj, comp.ticker))
+				{
+					System.out.println("There is already an entry for " + comp.ticker + "\n");
+				}else
+				{
+					break;
+				}
+			}
+			
+			System.out.println();
+			while(true)
+			{
+				System.out.print("What is the start date of " + comp.name + "? ");
+				comp.startDate = scan.nextLine();
+				if(!JsonProcessor.dateValidator(obj, comp.startDate))
+				{
+					System.out.println("Please enter a valid start date for "+comp.name+ "\n");
+				}
+				else
+				{
+					break;
+				}
+			}
+			System.out.println();
+			
+			while(true)
+			{
+				
+				System.out.print("What is the exchange where "+comp.name+" is listed? ");
+				comp.exchangeCode = scan.nextLine();
+				
+				if(!JsonProcessor.xChangeValidator(comp.exchangeCode))
+				{
+					System.out.println("Please enter a valid exchange"+ "\n");
+				}
+				else
+				{
+					break;
+				}
+			}
+			System.out.println();
+			
+			while(true)
+			{
+				System.out.print("What is the description of "+comp.name+"? ");
+				comp.description = scan.nextLine();
+				if(comp.description.isEmpty())
+				{
+					System.out.println("Please enter a valid description for " + comp.name+ "\n");
+				}
+				else
+				{
+					break;
+				}
+			}
+			
+			obj.data.add(comp);
+			
+			System.out.println("There is now an entry for: ");
+			Printer.printComp(comp);
+			System.out.println();
+		}
+		
+		private static void searchByXchange() {
+			String xc = new String();
+			while(true)
+			{
+				System.out.print("What Stock Exchange would you like to search for? ");
+				Scanner scan = new Scanner(System.in);
+				xc = scan.nextLine();
+				if(!JsonProcessor.xChangeValidator(xc))
+				{
+					System.out.println("Please enter a valid exchange.");
+				}
+				else
+				{
+					break;
+				}
+			}
+			
+			ArrayList<String> printingString = new ArrayList<String>();
+			
+			for(Company x : obj.data)
+			{
+				if(xc.equalsIgnoreCase(x.exchangeCode))
+				{
+					printingString.add(x.ticker);
+					printingString.add("::");
+				}
+			}
+			
+			printingString.remove(printingString.size()-1);
+			
+			for(int x = 0; x < printingString.size(); ++x)
+			{
+				if(printingString.get(x).equalsIgnoreCase("::"))
+				{
+					printingString.set(x, " and ");
+				}
+			}
+			
+			String s = new String();
+			for(String x : printingString)
+			{
+				s+=x;
+			}
+			s+=(" found on the " + xc + " exchange.");
+			Printer.print(s);
+		}
+		
+		private static void removeCompany() {
+			
+			Printer.printItemizedCompanyNames(obj);
+			Scanner scan = new Scanner(System.in);
+			int response = -9;
+			while(true) {
+				System.out.print("Which company would you like to remove? ");
+				try {
+					response = scan.nextInt();
+				}catch(InputMismatchException IME)
+				{
+					System.out.println("Please enter a number");
+				}catch(NoSuchElementException NSE)
+				{
+					System.out.println("Please enter a number");
+				}catch(IllegalStateException ISE)
+				{
+					System.out.println("Please enter a number");
+				}
+				if(response < 1 || response > obj.data.size())
+				{
+					System.out.println("Please enter a valid number");
+				}
+				else
+				{
+					break;
+				}
+			}
+			
+			System.out.println(obj.data.get(response-1).name + " is now removed.");
+			obj.data.remove(response-1);
+		}
+		
+		private static void sortCompanies() {
+			
+			Scanner scan = new Scanner(System.in);
+			int response = 0;
+			while(true) {
+				System.out.println("1) A to Z\n"
+						+ "2) Z to A\nHow would you like to sort by?");
+				try {
+					response = scan.nextInt();
+				}catch(InputMismatchException IME)
+				{
+					System.out.println("Please enter a number");
+				}catch(NoSuchElementException NSE)
+				{
+					System.out.println("Please enter a number");
+				}catch(IllegalStateException ISE)
+				{
+					System.out.println("Please enter a number");
+				}
+				if(response < 1 || response > 2)
+				{
+					System.out.println("Please enter a valid number");
+				}
+				else
+				{
+					break;
+				}
+			}
+			
+			Collections.sort(obj.data, new CompanyComparator());
+			if(response == 2)
+			{
+				Collections.reverse(obj.data);
+				System.out.println("\nYour companies are now sorted from in alphabetical order (Z-A).");
+			}
+			else
+			{
+				System.out.println("Your companies are now sorted from in alphabetical order (A-Z).");
+			}
+			
+			
+		}
+		
+		private static void exit() {
+			
+			
+			Scanner scan = new Scanner(System.in);
+			int response = 0;
+			while(true) {
+				System.out.print("1)Yes\n"
+			
+					+ "2) No\n"
+					+ "Would you like to save your edits? ");
+				try {
+					response = scan.nextInt();
+				}catch(InputMismatchException IME)
+				{
+					System.out.println("Please enter a number");
+				}catch(NoSuchElementException NSE)
+				{
+					System.out.println("Please enter a number");
+				}catch(IllegalStateException ISE)
+				{
+					System.out.println("Please enter a number");
+				}
+				if(response < 1 || response > 2)
+				{
+					System.out.println("Please enter a valid number");
+				}
+				else
+				{
+					break;
+				}
+			}
+			
+			if (response == 1)
+			{
+				GsonBuilder GB = new GsonBuilder();
+				GB.setPrettyPrinting();
+				Gson gson = GB.create();
+				FileWriter FW = null;
+				try {
+					FW = new FileWriter(obj.filename);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				printObj po = new printObj();
+				po.data = obj.data;
+				
+				try {
+					FW.write(gson.toJson(po));
+					FW.flush();
+					FW.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				//System.out.println(gson.toJson(po));
+	
+				System.out.println("Your changes have been saved to "+obj.filename);
+			}
+			System.out.println("Thank you for using my program!");
+			System.exit(0);
+		}
+		
+		public static JsonObject obj;
+	}
+	
+}
+
+class Printer
+{
+
+	Printer()
+	{
+	}
+	
+	public static void printHeading(Company comp)
+	{
+		String one = new String(comp.name + ", symbol" + comp.ticker + ", started on " + comp.startDate + ", listed on " + comp.exchangeCode);
+		
+		
+		System.out.println(WordUtils.wrap(one, 70, "\n", false));
+		 
+	}
+	
+	public static void print(String s)
+	{
+		System.out.println(WordUtils.wrap(s, 70, "\n", false));
+	}
+	
+	public static void printComp(Company comp)
+	{
+		
+		String one = new String(comp.name + ", symbol " + comp.ticker + ", started on " + comp.startDate + ", listed on " + comp.exchangeCode);
+		String two = new String(comp.description);
+		
+		 System.out.println(WordUtils.wrap(one, 70, "\n", false));
+		 
+		 System.out.print("\t");
+		 System.out.println(WordUtils.wrap(two, 70, "\n\t", false));	 
+	}
+
+	public static void printItemizedCompanyNames(JsonObject jObj)
+	{
+		for(int i = 1; i < jObj.data.size()+1; ++i)
+		{
+			System.out.println("\t" + i + ") "+ jObj.data.get(i-1).name);
+		}
+	}
+}
+
+
+// Object in order to parse the data from the json file
+class printObj
+{
+	@SerializedName("data")
+	public ArrayList<Company> data;
+
+}
+
+class JsonObject
+{	
+	JsonObject(){
+		works = false;
+		filename = new String();
+		data = new ArrayList<Company>();
+
+	}
+	
+	@SerializedName("data")
+	public ArrayList<Company> data;
+	
+	boolean works;
+	
+	String filename;
+}
+
+class Company 
+{
+	public Company(){}
+	
+	@SerializedName("name")
+	public String name;
+	
+	@SerializedName("ticker")
+	public String ticker;
+	
+	@SerializedName("startDate")
+	public String startDate;
+	
+	@SerializedName("description")
+	public String description;
+	
+	@SerializedName("exchangeCode")
+	public String exchangeCode;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,118 @@
+package lab5;
+
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.lang.Math;
+
+
+
+public class RandomNumberGenerator {
+
+	RandomNumberGenerator()
+	{
+		Random rand = new Random();
+		randomNumbers = new ArrayList<Integer>();
+		for(int i = 0; i < 100000000; ++i)
+		{
+			randomNumbers.add(Math.abs(rand.nextInt()%100000000));
+		}
+		
+		notInArrayTarget = 100000001;
+		System.out.flush();
+		target = randomNumbers.get(Math.abs((rand.nextInt()%100000000)));
+	}
+	
+	static ArrayList<Integer> randomNumbers;
+	static int target;
+	static int notInArrayTarget;
+}
+
+
+class Sequential
+{
+	int Run()
+	{
+		int i = 0;
+		for(Integer x : RandomNumberGenerator.randomNumbers)
+		{
+			if(x == RandomNumberGenerator.target)
+			{
+				return i;
+			}
+			++i;
+		}
+		return -1;
+	}
+}
+
+class multiThread extends Thread
+{
+	public multiThread() {
+		results = new ArrayList<Integer>();
+	}
+	
+	public multiThread(int x, int y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+	
+	public int runThisClass()
+	{
+		Thread t1 = new multiThread(0, 24999);
+		Thread t2 = new multiThread(25000,49999);
+		Thread t3 = new multiThread(50000,74999);
+		Thread t4 = new multiThread(75000, 100000);
+		
+		ExecutorService ES = Executors.newFixedThreadPool(4);
+		int max = -1;
+		
+		ES.submit(t1);
+		ES.submit(t2);
+		ES.submit(t3);
+		ES.submit(t4);
+		
+		ES.shutdown();
+		
+		while(!ES.isTerminated())
+		{
+			Thread.yield();
+		}
+		
+		for (Integer x : results)
+		{
+			if (max < x)
+			{
+				max = x;
+			}
+		}
+		
+		return max;
+	}
+	
+	public void run()
+	{
+		for(int i = x; i < y+1; ++i)
+		{
+			if(RandomNumberGenerator.target == RandomNumberGenerator.randomNumbers.get(i))
+			{
+				results.add(i);
+				return;
+			}
+		}
+		results.add(-1);
+	}
+	
+	public synchronized void UpdateArraylist()
+	{
+		
+	}
+	
+	
+	int x;
+	int y;
+	public static ArrayList<Integer> results;
+}

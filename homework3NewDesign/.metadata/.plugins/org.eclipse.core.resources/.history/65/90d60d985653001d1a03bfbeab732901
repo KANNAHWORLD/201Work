@@ -1,0 +1,62 @@
+package bansalsi_CSCI201_Assignment3;
+
+import java.util.Scanner;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
+
+public class Client{
+	public void createClient()
+	{
+		System.out.println("Welcome to SalStocks v2.0! \nEnter the server hostname:");
+		@SuppressWarnings("resource")
+		Scanner scan = new Scanner(System.in);
+		Socket sock = null;
+		BufferedReader br;
+		while (true)
+		{
+			try 
+			{
+				String serverPlace = scan.nextLine();
+				System.out.println("Enter the server port");
+				int port = scan.nextInt();
+				sock = new Socket(serverPlace, port);
+				br = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+			}
+			catch(Exception e)
+			{
+				System.out.println("There was an error with the IP address and port"
+						+ "please try again");
+				continue;
+			}
+			break;
+		}
+		String action = null;
+		try {
+			action = br.readLine();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		while (action != "Next")
+		{
+			try 
+			{
+				System.out.println(br.readLine());
+				action = br.readLine();
+				System.out.println("Waiting...");
+			} catch (IOException e) {
+				System.out.println("Println error");
+			}
+		}
+	}
+	
+	
+	public static void main(String [] args)
+	{
+		Client c = new Client();
+		c.createClient();
+	}
+	
+}

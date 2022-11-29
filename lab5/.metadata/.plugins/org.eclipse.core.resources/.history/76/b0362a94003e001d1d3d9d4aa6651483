@@ -1,0 +1,121 @@
+package lab5;
+
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Vector;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.lang.Math;
+
+
+
+public class RandomNumberGenerator {
+
+	RandomNumberGenerator()
+	{
+		Random rand = new Random();
+		randomNumbers = new Vector<Integer>();
+		for(int i = 0; i < 100000000; ++i)
+		{
+			randomNumbers.add(Math.abs(rand.nextInt()%100000000));
+		}
+		
+		notInArrayTarget = 100000001;
+		target = randomNumbers.get(Math.abs((rand.nextInt()%100000000)));
+	}
+	
+	public static Vector<Integer> randomNumbers;
+	public static Integer target;
+	public static int notInArrayTarget;
+}
+
+
+class Sequential
+{
+	int Run()
+	{
+		int i = 0;
+		for(Integer x : RandomNumberGenerator.randomNumbers)
+		{
+			if(x == RandomNumberGenerator.target)
+			{
+				return i;
+			}
+			++i;
+		}
+		return -1;
+	}
+}
+
+class multiThread extends Thread
+{
+	public multiThread() {
+		results = new ArrayList<Integer>();
+	}
+	
+	public multiThread(int x, int y)
+	{
+		this.x = x;
+		this.y = y;
+	}
+	
+	public int runThisClass()
+	{
+		Thread t1 = new multiThread(0, 24999);
+		Thread t2 = new multiThread(25000,49999);
+		Thread t3 = new multiThread(50000,74999);
+		Thread t4 = new multiThread(75000, 100000);
+		
+		ExecutorService ES = Executors.newFixedThreadPool(4);
+		int max = 0;
+		
+		ES.submit(t1);
+		ES.submit(t2);
+		ES.submit(t3);
+		ES.submit(t4);
+		
+		ES.shutdown();
+		
+		while(!ES.isTerminated())
+		{
+			Thread.yield();
+		}
+		
+		System.out.println(results);
+		for (Integer x : results)
+		{
+			if (max < x)
+			{
+				max = x;
+			}
+		}
+		
+		return max;
+	}
+	
+	public void run()
+	{
+		System.out.println("Yp");
+		Integer target = RandomNumberGenerator.target;
+		for(int i = x; i <= y; ++i)
+		{
+			Integer getInt = RandomNumberGenerator.randomNumbers.get(i);
+			if(getInt == target)
+			{
+				System.out.println("Hello");
+				UpdateArraylist(i);
+				return;
+			}
+		}
+	}
+	
+	public static synchronized void UpdateArraylist(int i)
+	{
+		results.add(i);
+	}
+	
+	
+	int x;
+	int y;
+	public static ArrayList<Integer> results;
+}

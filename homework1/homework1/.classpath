@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-14">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="/Users/siddharthbansal/homework201/homework1/homework1/gson-2.9.1.jar"/>
+	<classpathentry kind="lib" path="commons-lang3-3.11.jar"/>
+	<classpathentry kind="lib" path="commons-text-1.9.jar"/>
+	<classpathentry kind="lib" path="commons-beanutils-1.9.4.jar"/>
+	<classpathentry kind="lib" path="commons-collections-3.2.2.jar"/>
+	<classpathentry kind="lib" path="commons-digester-2.1.jar"/>
+	<classpathentry kind="lib" path="commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="commons-validator-1.7.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

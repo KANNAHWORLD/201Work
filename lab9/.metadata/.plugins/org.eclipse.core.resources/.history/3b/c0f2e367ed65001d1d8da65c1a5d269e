@@ -1,0 +1,15 @@
+import java.io.IOException;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+
+
+public class servlet {
+	
+	@WebServlet("/submit")
+	public void submit()
+	{
+		System.out.println("Hello");
+	}
+}

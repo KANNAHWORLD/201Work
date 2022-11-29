@@ -1,0 +1,20 @@
+package lab5;
+
+public class Main {
+
+	public static void main(String [] args)
+	{
+		Sequential search = new Sequential();
+		start = System.currentTimeMillis();
+		search.Run();
+		System.out.println(System.currentTimeMillis()-start);
+		
+		multiThread MT = new multiThread();
+		start = System.currentTimeMillis();
+		MT.runThisClass();
+		System.out.println(System.currentTimeMillis()-start);
+	}
+	
+	static long start;
+	
+}
